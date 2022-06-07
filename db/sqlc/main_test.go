@@ -10,16 +10,18 @@ import (
 )
 
 var testQueries *Queries
+var testDb *sql.DB
 var driver = "postgres"
 var source = "postgresql://root:secret@localhost:5432/goBank?sslmode=disable"
 
 func TestMain(m *testing.M) {
 
-	conn, err := sql.Open(driver, source)
+	var err error
+	testDb, err = sql.Open(driver, source)
 	if err != nil {
 		log.Fatal("Failed to connect to db")
 	}
 
-	testQueries = New(conn)
+	testQueries = New(testDb)
 	os.Exit(m.Run())
 }
