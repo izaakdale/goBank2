@@ -115,6 +115,11 @@ func TestListAccount(t *testing.T) {
 
 	dbAccounts, err := testQueries.ListAccounts(context.Background(), args)
 	require.NoError(t, err)
+
+	if len(dbAccounts) < 1 {
+		t.Error("Failed to get any rows from db")
+	}
+
 	for _, dbAcc := range dbAccounts {
 		require.NotEmpty(t, dbAcc)
 	}
