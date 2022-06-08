@@ -30,6 +30,12 @@ currency = $3
 WHERE id = $1
 RETURNING *;
 
+-- name: AddToAccountBalance :one
+UPDATE accounts
+set balance = balance + sqlc.arg(amount)
+WHERE id = $1
+RETURNING *;
+
 -- name: DeleteAccount :exec
 DELETE FROM accounts
 WHERE id = $1;

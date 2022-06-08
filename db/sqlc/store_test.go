@@ -21,6 +21,7 @@ func TestTransferTx(t *testing.T) {
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
 	for i := 0; i < n; i++ {
+		// create concurrent transaction blocks to force deadlocks
 		go func() {
 			result, err := store.TransferTx(context.Background(), TransferTxParams{
 				FromAccountID: account1.ID,
