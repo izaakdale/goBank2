@@ -105,4 +105,61 @@ func TestTransferTx(t *testing.T) {
 
 	require.Equal(t, account1.Balance-float64(n)*amount, updatedAcc1.Balance)
 	require.Equal(t, account2.Balance+float64(n)*amount, updatedAcc2.Balance)
+
+	deleteTestAccount(t, account1.ID)
+	deleteTestAccount(t, account2.ID)
+}
+
+func TestTransferTxDeadlock(t *testing.T) {
+
+	store := NewStore(testDb)
+
+	account1 := createRandomAccount(t)
+	account2 := createRandomAccount(t)
+
+	amount := float64(10)
+	n := 10
+
+	errs := make(chan error)
+
+	for i := 0; i < n; i++ {
+		// create concurrent transaction blocks to force deadlocks
+
+		fromAccountID := account1.ID
+		toAccountID := account2.ID
+
+		if i%2 == 1 {
+			fromAccountID = account2.ID
+			toAccountID = account1.ID
+		}
+
+		go func() {
+			_, err := store.TransferTx(context.Background(), TransferTxParams{
+				FromAccountID: fromAccountID,
+				ToAccountID:   toAccountID,
+				Amount:        float64(amount),
+			})
+
+			errs <- err
+		}()
+	}
+
+	// check results of channel
+	for i := 0; i < n; i++ {
+		err := <-errs
+		require.NoError(t, err)
+	}
+
+	//check the final balances
+	updatedAcc1, err := testQueries.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+	updatedAcc2, err := testQueries.GetAccount(context.Background(), account2.ID)
+	require.NoError(t, err)
+
+	// in this test 5 transfers go one way, and 5 the other
+	require.Equal(t, account1.Balance, updatedAcc1.Balance)
+	require.Equal(t, account2.Balance, updatedAcc2.Balance)
+
+	deleteTestAccount(t, account1.ID)
+	deleteTestAccount(t, account2.ID)
 }
