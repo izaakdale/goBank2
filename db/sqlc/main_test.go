@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/izaakdale/goBank2/util"
 	_ "github.com/lib/pq"
 )
 
@@ -15,9 +16,12 @@ var driver = "postgres"
 var source = "postgresql://root:secret@localhost:5432/goBank?sslmode=disable"
 
 func TestMain(m *testing.M) {
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("Unable to load config file during testing")
+	}
 
-	var err error
-	testDb, err = sql.Open(driver, source)
+	testDb, err = sql.Open(config.DbDriver, config.DbSoruce)
 	if err != nil {
 		log.Fatal("Failed to connect to db")
 	}
