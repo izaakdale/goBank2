@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -19,25 +20,78 @@ import (
 func TestGetAccountApi(t *testing.T) {
 	account := randomAccount()
 
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	testCases := []struct {
+		name          string
+		accountID     int64
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name:      "Ok",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Return(account, nil).Times(1)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				requireMatchAccountBody(t, recorder.Body, account)
+			},
+		},
+		{
+			name:      "NotFound",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Return(db.Account{}, sql.ErrNoRows).Times(1)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
+			},
+		},
+		{
+			name:      "InternalError",
+			accountID: account.ID,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Return(db.Account{}, sql.ErrConnDone).Times(1)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name:      "BadRequest",
+			accountID: 0,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(0)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+	}
 
-	store := mockdb.NewMockStore(ctrl)
+	for i := range testCases {
+		tc := testCases[i]
 
-	// create the stub that returns the account when account id is requested
-	store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account.ID)).Return(account, nil).Times(1)
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-	// start http server and send request
-	server := NewServer(store)
-	recorder := httptest.NewRecorder()
+			store := mockdb.NewMockStore(ctrl)
 
-	url := fmt.Sprintf("/accounts/%d", account.ID)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	require.NoError(t, err)
+			tc.buildStubs(store)
 
-	server.router.ServeHTTP(recorder, req)
-	require.Equal(t, http.StatusOK, recorder.Code)
-	requireMatchAccountBody(t, recorder.Body, account)
+			// start http server and send request
+			server := NewServer(store)
+			recorder := httptest.NewRecorder()
+
+			url := fmt.Sprintf("/accounts/%d", tc.accountID)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
+
+			server.router.ServeHTTP(recorder, req)
+			tc.checkResponse(t, recorder)
+		})
+	}
 }
 func randomAccount() db.Account {
 	return db.Account{
@@ -47,7 +101,6 @@ func randomAccount() db.Account {
 		Currency: util.RandomCurrency(),
 	}
 }
-
 func requireMatchAccountBody(t *testing.T, body *bytes.Buffer, account db.Account) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
