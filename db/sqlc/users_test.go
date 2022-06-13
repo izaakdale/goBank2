@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomUser(t *testing.T) User {
+func createRandomUser(t *testing.T) CreateUserRow {
 	password := util.RandomString(6)
 	hashPass, err := util.HashPassword(password)
 
@@ -26,11 +26,11 @@ func createRandomUser(t *testing.T) User {
 	require.NotEmpty(t, user)
 
 	require.Equal(t, arg.Username, user.Username)
-	require.Equal(t, arg.HashedPassword, user.HashedPassword)
-	require.Equal(t, arg.FullName, user.FullName)
+	// require.Equal(t, arg.HashedPassword, user.HashedPassword)
+	// require.Equal(t, arg.FullName, user.FullName)
 	require.Equal(t, arg.Email, user.Email)
 
-	require.True(t, user.PasswordChangedAt.IsZero())
+	// require.True(t, user.PasswordChangedAt.IsZero())
 	require.NotZero(t, user.CreatedAt)
 
 	return user
@@ -50,10 +50,10 @@ func TestGetUser(t *testing.T) {
 	require.NotEmpty(t, dbUser)
 
 	require.Equal(t, user.Username, dbUser.Username)
-	require.Equal(t, user.HashedPassword, dbUser.HashedPassword)
-	require.Equal(t, user.FullName, dbUser.FullName)
+	require.NotEmpty(t, dbUser.HashedPassword)
+	require.NotEmpty(t, dbUser.FullName)
 	require.Equal(t, user.Email, dbUser.Email)
 	require.Equal(t, user.CreatedAt, dbUser.CreatedAt)
-	require.Equal(t, user.PasswordChangedAt, dbUser.PasswordChangedAt)
+	require.NotEmpty(t, dbUser.PasswordChangedAt)
 
 }
