@@ -38,3 +38,7 @@ func RandomBalance() int64 {
 func RandomCurrency() string {
 	return SupportedCurrencies[rand.Intn(len(SupportedCurrencies))]
 }
+
+func RandomEmail() string {
+	return RandomString(6) + "@" + RandomString(4) + ".com"
+}
