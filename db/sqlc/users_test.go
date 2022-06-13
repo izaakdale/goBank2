@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomUser(t *testing.T) CreateUserRow {
+func createRandomUser(t *testing.T) User {
 	password := util.RandomString(6)
 	hashPass, err := util.HashPassword(password)
 
@@ -26,11 +26,11 @@ func createRandomUser(t *testing.T) CreateUserRow {
 	require.NotEmpty(t, user)
 
 	require.Equal(t, arg.Username, user.Username)
-	// require.Equal(t, arg.HashedPassword, user.HashedPassword)
-	// require.Equal(t, arg.FullName, user.FullName)
+	require.Equal(t, arg.HashedPassword, user.HashedPassword)
+	require.Equal(t, arg.FullName, user.FullName)
 	require.Equal(t, arg.Email, user.Email)
 
-	// require.True(t, user.PasswordChangedAt.IsZero())
+	require.True(t, user.PasswordChangedAt.IsZero())
 	require.NotZero(t, user.CreatedAt)
 
 	return user
