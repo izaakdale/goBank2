@@ -76,13 +76,13 @@ func (server *Server) getAccount(ctx *gin.Context) {
 
 type listAccountsRequest struct {
 	Owner    string `json:"owner" binding:"required"`
-	PageID   int32  `form:"page_id" binding:"required,min=0"`
-	PageSize int32  `form:"page_size" binding:"required,min=2,max=10"`
+	PageID   int32  `json:"page_id" binding:"required,min=0"`
+	PageSize int32  `json:"page_size" binding:"required,min=2,max=10"`
 }
 
 func (server *Server) listAccounts(ctx *gin.Context) {
 	var req listAccountsRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
