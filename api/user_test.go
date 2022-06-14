@@ -137,6 +137,18 @@ func TestGetUserApi(t *testing.T) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
 			},
 		},
+		{
+			Name:     "NoAuth",
+			Username: user.Username,
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetUser(gomock.Any(), user.Username).Times(0)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {
@@ -174,6 +186,7 @@ func TestCreateUserApi(t *testing.T) {
 		Name          string
 		Body          gin.H
 		buildStubs    func(store *mockdb.MockStore)
+		setupAuth     func(t *testing.T, request *http.Request, tokenMaker *token.Maker)
 		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
 	}{
 		{
@@ -192,6 +205,9 @@ func TestCreateUserApi(t *testing.T) {
 				}
 				store.EXPECT().CreateUser(gomock.Any(), eqCreateUserParams(arg, password)).Times(1).Return(user, nil)
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
+			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
@@ -206,6 +222,9 @@ func TestCreateUserApi(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(db.User{}, sql.ErrConnDone)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -227,6 +246,9 @@ func TestCreateUserApi(t *testing.T) {
 				}
 				store.EXPECT().CreateUser(gomock.Any(), eqCreateUserParams(arg, password)).Times(0)
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
+			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
@@ -242,6 +264,9 @@ func TestCreateUserApi(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
 			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
+			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
@@ -256,6 +281,9 @@ func TestCreateUserApi(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(0)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -276,6 +304,9 @@ func TestCreateUserApi(t *testing.T) {
 					Email:    user.Email,
 				}
 				store.EXPECT().CreateUser(gomock.Any(), eqCreateUserParams(arg, password)).Times(1).Return(db.User{}, &pq.Error{Code: "23505"})
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+				addAuthHeader(t, request, *tokenMaker, AuthorizationTypeBearer, user.Username, time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -302,6 +333,7 @@ func TestCreateUserApi(t *testing.T) {
 		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 		require.NoError(t, err)
 
+		tc.setupAuth(t, req, &server.tokenMaker)
 		server.router.ServeHTTP(recorder, req)
 		tc.checkResponse(t, recorder)
 	}

@@ -171,6 +171,31 @@ func TestTransferApi(t *testing.T) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
+		{
+			name: "NoAuth",
+			body: gin.H{
+				"from_account_id": account1.ID,
+				"to_account_id":   account2.ID,
+				"amount":          amount,
+				"currency":        util.USD,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(0)
+				store.EXPECT().GetAccount(gomock.Any(), gomock.Eq(account2.ID)).Times(0).Return(account2, nil)
+
+				req := db.TransferTxParams{
+					FromAccountID: account1.ID,
+					ToAccountID:   account2.ID,
+					Amount:        amount,
+				}
+				store.EXPECT().TransferTx(gomock.Any(), gomock.Eq(req)).Times(0)
+			},
+			setupAuth: func(t *testing.T, request *http.Request, tokenMaker *token.Maker) {
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
 	}
 
 	for i := range testCases {
