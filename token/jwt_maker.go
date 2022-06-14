@@ -43,7 +43,7 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(t *jwt.Token) (interface{}, error) {
 		_, ok := t.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, jwt.ErrInvalidKeyType
+			return nil, ErrInvalidKey
 		}
 		return []byte(maker.secretKey), nil
 	}
@@ -52,15 +52,15 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	if err != nil {
 		// token invalid or expired
 		verr, ok := err.(*jwt.ValidationError)
-		if ok && errors.Is(verr.Inner, jwt.ErrTokenExpired) {
-			return nil, jwt.ErrTokenExpired
+		if ok && errors.Is(verr.Inner, ErrTokenExpired) {
+			return nil, ErrTokenExpired
 		}
-		return nil, jwt.ErrInvalidKeyType
+		return nil, ErrInvalidKey
 	}
 
 	payload, ok := jwtToken.Claims.(*Payload)
 	if !ok {
-		return nil, jwt.ErrInvalidKeyType
+		return nil, ErrInvalidKey
 	}
 
 	return payload, nil

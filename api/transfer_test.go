@@ -163,7 +163,7 @@ func TestTransferApi(t *testing.T) {
 			tc.buildStubs(store)
 
 			// start http server and send request
-			server := NewServer(store)
+			server := NewTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			data, err := json.Marshal(tc.body)

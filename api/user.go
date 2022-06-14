@@ -17,12 +17,22 @@ type createUserRequest struct {
 	FullName       string `json:"full_name" binding:"required"`
 	Email          string `json:"email" binding:"required,email"`
 }
-type createUserResponse struct {
+type userResponse struct {
 	Username          string    `json:"username"`
 	FullName          string    `json:"full_name"`
 	Email             string    `json:"email"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
+}
+
+func toUserResponse(user db.User) userResponse {
+	return userResponse{
+		Username:          user.Username,
+		Email:             user.Email,
+		FullName:          user.FullName,
+		CreatedAt:         user.CreatedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+	}
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -57,15 +67,7 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	response := createUserResponse{
-		Username:          user.Username,
-		FullName:          user.FullName,
-		Email:             user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-	}
-
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, toUserResponse(user))
 }
 
 type getUserRequest struct {

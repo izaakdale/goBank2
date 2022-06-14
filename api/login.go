@@ -3,10 +3,8 @@ package api
 import (
 	"database/sql"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/izaakdale/goBank2/token"
 	"github.com/izaakdale/goBank2/util"
 )
 
@@ -15,7 +13,8 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 type loginResponse struct {
-	Token string `json:"token"`
+	Token string       `json:"access_token"`
+	User  userResponse `json:"user"`
 }
 
 func (server *Server) login(ctx *gin.Context) {
@@ -40,22 +39,11 @@ func (server *Server) login(ctx *gin.Context) {
 	// validate password encryption
 	err = util.VerifyPassword(req.Password, user.HashedPassword)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
-	// placeholder key for dev
-	key := util.RandomString(32)
-	// return paseto with claims
-	maker, err := token.NewPasetoMaker(key)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	// placeholer duration for dev
-	tokenTimeout := time.Minute
-	paseto, err := maker.CreateToken(req.Username, tokenTimeout)
+	paseto, err := server.tokenMaker.CreateToken(req.Username, server.config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -63,6 +51,7 @@ func (server *Server) login(ctx *gin.Context) {
 
 	rsp := loginResponse{
 		paseto,
+		toUserResponse(user),
 	}
 	ctx.JSON(http.StatusOK, rsp)
 }
