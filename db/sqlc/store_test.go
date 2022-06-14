@@ -12,8 +12,10 @@ func TestTransferTx(t *testing.T) {
 
 	store := NewStore(testDb)
 
-	account1 := createRandomAccount(t)
-	account2 := createRandomAccount(t)
+	user1 := createRandomUser(t)
+	account1 := createRandomAccount(t, user1.Username)
+	user2 := createRandomUser(t)
+	account2 := createRandomAccount(t, user2.Username)
 
 	amount := float64(10)
 	n := 5
@@ -114,8 +116,10 @@ func TestTransferTxDeadlock(t *testing.T) {
 
 	store := NewStore(testDb)
 
-	account1 := createRandomAccount(t)
-	account2 := createRandomAccount(t)
+	user1 := createRandomUser(t)
+	account1 := createRandomAccount(t, user1.Username)
+	user2 := createRandomUser(t)
+	account2 := createRandomAccount(t, user2.Username)
 
 	amount := float64(10)
 	n := 10

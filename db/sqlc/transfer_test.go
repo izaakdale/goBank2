@@ -24,8 +24,10 @@ func createTestTransfer(t *testing.T, account1, account2 Account) (Transfer, Cre
 
 func TestCreateTransfer(t *testing.T) {
 
-	account1 := createRandomAccount(t)
-	account2 := createRandomAccount(t)
+	user1 := createRandomUser(t)
+	account1 := createRandomAccount(t, user1.Username)
+	user2 := createRandomUser(t)
+	account2 := createRandomAccount(t, user2.Username)
 
 	transfer, args := createTestTransfer(t, account1, account2)
 
@@ -41,8 +43,10 @@ func TestCreateTransfer(t *testing.T) {
 
 func TestGetTransfer(t *testing.T) {
 
-	account1 := createRandomAccount(t)
-	account2 := createRandomAccount(t)
+	user1 := createRandomUser(t)
+	account1 := createRandomAccount(t, user1.Username)
+	user2 := createRandomUser(t)
+	account2 := createRandomAccount(t, user2.Username)
 
 	transfer, _ := createTestTransfer(t, account1, account2)
 
@@ -62,8 +66,10 @@ func TestGetTransfer(t *testing.T) {
 
 func TestListTransfers(t *testing.T) {
 
-	account1 := createRandomAccount(t)
-	account2 := createRandomAccount(t)
+	user1 := createRandomUser(t)
+	account1 := createRandomAccount(t, user1.Username)
+	user2 := createRandomUser(t)
+	account2 := createRandomAccount(t, user2.Username)
 
 	var transfers []Transfer
 

@@ -22,7 +22,8 @@ func createTestEntry(t *testing.T, account Account) (Entry, CreateEntryParams) {
 
 func TestCreateEntry(t *testing.T) {
 
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 	entry, args := createTestEntry(t, account)
 
 	require.Equal(t, account.ID, entry.AccountID)
@@ -35,7 +36,8 @@ func TestCreateEntry(t *testing.T) {
 
 func TestGetEntry(t *testing.T) {
 
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 	entry, _ := createTestEntry(t, account)
 
 	dbEntry, err := testQueries.GetEntry(context.Background(), entry.ID)
@@ -51,7 +53,8 @@ func TestGetEntry(t *testing.T) {
 
 func TestListEntries(t *testing.T) {
 
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 	var entries []Entry
 
 	for i := 0; i < 10; i++ {

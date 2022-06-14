@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomAccount(t *testing.T) Account {
-	user := createRandomUser(t)
+func createRandomAccount(t *testing.T, owner string) Account {
+	// user := createRandomUser(t)
 	arg := CreateAccountParams{
-		Owner:    user.Username,
+		Owner:    owner,
 		Balance:  float64(util.RandomBalance()),
 		Currency: util.RandomCurrency(),
 	}
@@ -38,7 +38,8 @@ func deleteTestAccount(t *testing.T, accountId int64) {
 }
 
 func TestCreateAccount(t *testing.T) {
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 
 	err := testQueries.DeleteAccount(context.Background(), account.ID)
 	require.NoError(t, err)
@@ -46,7 +47,8 @@ func TestCreateAccount(t *testing.T) {
 
 func TestGetAccount(t *testing.T) {
 	// create account
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 
 	dbAccount, err := testQueries.GetAccount(context.Background(), account.ID)
 
@@ -64,7 +66,8 @@ func TestGetAccount(t *testing.T) {
 
 func TestUpdateAccount(t *testing.T) {
 
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 
 	// using CAD since this cannot be randomly generated
 	updateParams := UpdateAccountParams{
@@ -91,7 +94,8 @@ func TestUpdateAccount(t *testing.T) {
 }
 
 func TestDeleteAccount(t *testing.T) {
-	account := createRandomAccount(t)
+	user := createRandomUser(t)
+	account := createRandomAccount(t, user.Username)
 
 	deleteTestAccount(t, account.ID)
 
@@ -106,12 +110,15 @@ func TestListAccount(t *testing.T) {
 	var accounts []Account
 
 	for i := 0; i < 10; i++ {
-		accounts = append(accounts, createRandomAccount(t))
+		user := createRandomUser(t)
+		account := createRandomAccount(t, user.Username)
+		accounts = append(accounts, account)
 	}
 
 	args := ListAccountsParams{
+		Owner:  accounts[0].Owner,
 		Limit:  5,
-		Offset: 3,
+		Offset: 0,
 	}
 
 	dbAccounts, err := testQueries.ListAccounts(context.Background(), args)
@@ -123,6 +130,7 @@ func TestListAccount(t *testing.T) {
 
 	for _, dbAcc := range dbAccounts {
 		require.NotEmpty(t, dbAcc)
+		require.Equal(t, dbAcc.Owner, accounts[0].Owner)
 	}
 
 	for _, account := range accounts {
