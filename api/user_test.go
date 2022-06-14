@@ -128,26 +128,26 @@ func TestGetUserApi(t *testing.T) {
 
 		tc := testCases[i]
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+		t.Run(tc.Name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		store := mockdb.NewMockStore(ctrl)
-		server := NewTestServer(t, store)
+			store := mockdb.NewMockStore(ctrl)
+			server := NewTestServer(t, store)
 
-		tc.buildStubs(store)
+			tc.buildStubs(store)
 
-		recorder := httptest.NewRecorder()
+			recorder := httptest.NewRecorder()
 
-		url := "/users/" + tc.Username
-		req, err := http.NewRequest(http.MethodGet, url, nil)
-		require.NoError(t, err)
+			url := "/users/" + tc.Username
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			require.NoError(t, err)
 
-		server.router.ServeHTTP(recorder, req)
+			server.router.ServeHTTP(recorder, req)
 
-		tc.checkResponse(t, recorder)
-
+			tc.checkResponse(t, recorder)
+		})
 	}
-
 }
 
 func TestCreateUserApi(t *testing.T) {
