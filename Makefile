@@ -1,5 +1,5 @@
 postgres:
-	docker run --name postDb -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres
+	docker run --name postDb --network=banking-backend -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres
 createdb:
 	docker exec -it postDb createdb --username=root --owner=root goBank
 dropdb:
@@ -20,5 +20,9 @@ server:
 	go run main.go
 mock:
 	mockgen -destination db/mock/store.go -package mockdb github.com/izaakdale/goBank2/db/sqlc Store
+dockerbuild:
+	docker build -t gobank:latest .
+dockerrun:
+	docker run --name gobank --network=banking-backend -p 8080:8080 -e DB_SOURCE="postgresql://root:secret@postDb:5432/goBank?sslmode=disable" gobank:latest
 _PHONY:
 	postgres createdb dropdb migrateup migratedown sqlc test main migrateup1 migratedown1
