@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   postgres:
-    # container_name: postDb
+    container_name: postDb
     image: postgres:latest
     environment: 
       - POSTGRES_USER=root
@@ -9,21 +9,21 @@ services:
       - POSTGRES_DB=goBank
     ports:
       - "5432:5432"
-    # networks:
-    #   - backend
+    networks:
+      - backend
   api:
-    # container_name: app
+    container_name: app
     image: gobank:latest
     ports:
       - "8080:8080"
     environment:
-      - DB_SOURCE="postgresql://root:secret@postgres:5432/goBank?sslmode=disable"
-    # networks:
-    #   - backend
-    # depends_on:
-      # - postgres
-    # entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
-    # command: ["/app/main"]
+      - DB_SOURCE=postgresql://root:secret@postgres:5432/goBank?sslmode=disable
+    networks:
+      - backend
+    depends_on:
+      - postgres
+    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
+    command: ["/app/main"]
 
-# networks:
-#   backend:
+networks:
+  backend:
