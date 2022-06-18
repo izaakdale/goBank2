@@ -1,0 +1,4 @@
+make: Entering directory `/Users/izaakdale/work/go/src/github.com/izaakdale/goBank2'
+docker run --name postDb --network=banking-backend -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres
+make: Leaving directory `/Users/izaakdale/work/go/src/github.com/izaakdale/goBank2'
+ 
