@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gobank-ingress
+spec:
+  rules:
+  - host: "api.af724a608da1b48ed9feb115479cf0e9-478169013.us-east-2.elb.amazonaws.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: gobank-api-service
+            port:
+              number: 80
